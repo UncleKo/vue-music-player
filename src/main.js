@@ -21,6 +21,7 @@ Vue.component('records', {
                <div class="controls">
                   <i class="far fa-play-circle" v-show="!(self.playing)" @click="play(self, $event)"></i>
                   <i class="far fa-pause-circle" v-show="self.playing" @click="pause(self, $event)"></i>
+                  <!-- <i class="fas fa-fast-backward" @click="rewind(self, $event)"></i> -->
                   <i class="far fa-stop-circle" @click="stop(self, $event)"></i>
                </div>
 
@@ -33,7 +34,7 @@ Vue.component('records', {
          </transition>
 
          <div class="tune-list">
-            <i class="far fa-play-circle" v-show="!(self.playing)" @click="showPlayer(self, $event)"></i>
+            <i class="far fa-play-circle" v-show="!(self.playing)" @click="play(self, $event)"></i>
             <i class="far fa-pause-circle" v-show="self.playing" @click="pause(self, $event)"></i>
             <h2>{{ self.title }}</h2>
             <p>{{ self.description }}</p>
@@ -79,10 +80,7 @@ Vue.component('records', {
 
    created() {
 
-      this.records.forEach( self => {
-         self.showPlayer = false;
-         self.playing = false;
-      });
+      this.reset();
 
       Event.$on('close', () => { 
          this.records.forEach( self => {
@@ -94,30 +92,42 @@ Vue.component('records', {
 
    methods: {
 
+      reset() {
+         this.records.forEach( self => {
+            self.showPlayer = false;
+            self.playing = false;
+         });
+      },
+
       audio(e) {
          // let audio = e.target.parentNode.querySelector('audio');
          let audio = e.target.closest('.tune').querySelector('audio');
          return audio;
       },
 
-      showPlayer(self, e) {
-         this.records.forEach( record => record.showPlayer = false );
-         document.querySelectorAll('audio').forEach(aud => {
-            aud.pause();
-         });
-         
-         self.showPlayer = true;
-         self.playing = true;
+      // showPlayer(self, e) {
+      //    this.records.forEach( record => record.showPlayer = false );
+      //    
+      //    self.showPlayer = true;
+      //    // self.playing = true;
 
-         let audio = this.audio(e);
-         // audio.currentTime = 0;
-         audio.play();
-      },
+      //    // let audio = this.audio(e);
+      //    // audio.currentTime = 0;
+      //    // audio.play();
+      // },
 
       play(self, e) {
          let audio = this.audio(e);
+         Array.from(document.querySelectorAll('audio'))
+            .filter((anotherAudio) => anotherAudio !== audio)
+            .forEach( anotherAudio => {
+               anotherAudio.pause();
+               anotherAudio.currentTime = 0;
+            });
+         this.reset();
          audio.play();
          self.playing = true;
+         self.showPlayer = true;
       },
 
       pause(self, e) {
@@ -198,32 +208,5 @@ document.querySelectorAll('.player').forEach(player => {
       player.querySelector('.progress-bar').style.width = audio.currentTime / audio.duration * 100 + '%';
    }
 
-   // player.querySelector('.fa-play-circle').on('click', function() {
-   //    audio.play();
-   // })
-
-   // player.querySelector('.fa-pause-circle').on('click', function() {
-   //    audio.pause();
-   // })
-
-   // player.querySelector('.fa-fast-backward').on('click', function() {
-   //    audio.currentTime = 0;
-   //    audio.play();
-   // })
-
-   // player.querySelector('.fa-stop-circle').on('click', function() {
-   //    audio.pause();
-   //    audio.currentTime = 0;
-   // })
-
 })
-
-// $$('.fa-play-circle').forEach(key => key.on('click', function() {
-//    this.parentNode.querySelector('audio').play();
-// }))
-
-// $$('.fa-pause-circle').forEach(key => key.on('click', function() {
-//    this.parentNode.querySelector('audio').pause();
-// }))
-
 
