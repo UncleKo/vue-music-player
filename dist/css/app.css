@@ -95,7 +95,7 @@ h2 {
     /* justify-content: space-between; */ }
     .player > .container > * {
       margin: 0 20px; }
-    .player > .container .player > .container > .close {
+    .player > .container > .close {
       font-size: 20px;
       font-weight: bold;
       cursor: pointer;

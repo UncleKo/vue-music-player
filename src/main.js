@@ -13,29 +13,27 @@ Vue.component('records', {
 
          <transition name="player" tag="div">
    
-            <player class='player' v-show="self.showPlayer">
+            <player class='player' :class="self.showPlayer ? 'active' : ''" v-show="self.showPlayer">
             
                <h2>{{ self.title }}</h2>
 
-               <audio :id="self.id" :src="self.src"></audio>
+               <audio :id="self.id" :src="self.src" @play="self.playing=true" @pause="self.playing=false"></audio>
                <div class="controls">
-                  <i class="far fa-play-circle" v-show="!(self.playing)" @click="play(self, $event)"></i>
-                  <i class="far fa-pause-circle" v-show="self.playing" @click="pause(self, $event)"></i>
-                  <!-- <i class="fas fa-fast-backward" @click="rewind(self, $event)"></i> -->
-                  <i class="far fa-stop-circle" @click="stop(self, $event)"></i>
+                  <i data-skip="-3" class="fas fa-fast-backward"></i>
+                  <i class="fas fa-stop" @click="stop(self, $event)"></i>
+                  <i class="fas pp" :class=" self.playing ? 'fa-pause' : 'fa-play' " @click="togglePlay(self, $event)"></i>
+                  <!-- <i class="far" :class="[{ 'fa-play-circle': !(self.playing) }, { 'fa-pause-circle': self.playing }]" @click="togglePlay(self, $event)"></i> -->
+                  <i data-skip="2" class="fas fa-fast-forward"></i>
                </div>
 
-               <div class="progress-wrap">
-                     <div class="progress-bar"></div>
-               </div>
 
              </player>
          
          </transition>
 
-         <div class="tune-list">
-            <i class="far fa-play-circle" v-show="!(self.playing)" @click="play(self, $event)"></i>
-            <i class="far fa-pause-circle" v-show="self.playing" @click="pause(self, $event)"></i>
+         <div class="tune-list" :class="self.showPlayer ? 'active' : ''">
+            <i class="far pp" :class=" self.playing ? 'fa-pause-circle' : 'fa-play-circle' " @click="togglePlay(self, $event)"></i>
+            <!-- <i class="far" :class="[{ 'fa-play-circle': !(self.playing) }, { 'fa-pause-circle': self.playing }]" @click="togglePlay(self, $event)"></i> -->
             <h2>{{ self.title }}</h2>
             <p>{{ self.description }}</p>
          </div> <!-- tune-list -->
@@ -83,11 +81,26 @@ Vue.component('records', {
       this.reset();
 
       Event.$on('close', () => { 
-         this.records.forEach( self => {
-            self.showPlayer = false;
-            self.playing = false;
-         });
+         this.reset();
       });
+
+      window.addEventListener('keydown', function(e) {
+         if (e.keyCode === 32) {
+            let activePlayer = document.querySelector('.player.active');
+            if(!activePlayer) return;
+            let activeAudio = activePlayer.querySelector('audio');
+            // let pp = document.querySelectorAll('.active .pp');
+            // console.log(pp);
+            if(activeAudio.paused) {
+               activeAudio.play();
+               // pp.forEach(pp => pp.className = 'far pp fa-pause-circle');
+            } else {
+               activeAudio.pause();
+               // pp.forEach(pp => pp.className = 'far pp fa-play-circle');
+            }
+         }
+      });
+      
    },
 
    methods: {
@@ -100,54 +113,37 @@ Vue.component('records', {
       },
 
       audio(e) {
-         // let audio = e.target.parentNode.querySelector('audio');
          let audio = e.target.closest('.tune').querySelector('audio');
          return audio;
       },
 
-      // showPlayer(self, e) {
-      //    this.records.forEach( record => record.showPlayer = false );
-      //    
-      //    self.showPlayer = true;
-      //    // self.playing = true;
-
-      //    // let audio = this.audio(e);
-      //    // audio.currentTime = 0;
-      //    // audio.play();
-      // },
-
-      play(self, e) {
+      togglePlay(self, e) {
          let audio = this.audio(e);
-         Array.from(document.querySelectorAll('audio'))
-            .filter((anotherAudio) => anotherAudio !== audio)
-            .forEach( anotherAudio => {
-               anotherAudio.pause();
-               anotherAudio.currentTime = 0;
-            });
-         this.reset();
-         audio.play();
-         self.playing = true;
-         self.showPlayer = true;
-      },
+         if(audio.paused) {
+            Array.from(document.querySelectorAll('audio'))
+               .filter((anotherAudio) => anotherAudio !== audio)
+               .forEach( anotherAudio => {
+                  anotherAudio.pause();
+                  anotherAudio.currentTime = 0;
+               });
+            this.reset();
+            audio.play();
+            // self.playing = true;
+            self.showPlayer = true;
 
-      pause(self, e) {
-         let audio = this.audio(e);
-         audio.pause();
-         self.playing = false;
+         } else {
+            audio.pause();
+            // self.playing = false;
+         }
       },
-
-      // rewind(self, e) {
-      //    let audio = this.audio(e);
-      //    audio.currentTime = 0;
-      //    audio.play();
-      // },
 
       stop(self, e) {
          let audio = this.audio(e);
          audio.pause();
          audio.currentTime = 0;
          self.playing = false;
-      }
+      },
+      
    }
 
 });
@@ -161,6 +157,15 @@ Vue.component('player', {
              <div class="container">
 
                 <slot></slot>
+
+               <div class="progress-wrap">
+                     <div class="progress-bar"></div>
+               </div>
+   
+               <div class="volume">
+                   <i class="fas fa-volume-up"></i>
+                   <input type="range" name="volume" min="0" max="1" step="0.05" value="1" autocomplete="off">
+               </div>
 
                 <span class="close" @click="closePlayer">x</span>
 
@@ -202,11 +207,38 @@ new Vue({
 
 document.querySelectorAll('.player').forEach(player => {
 
+   let progress = player.querySelector('.progress-wrap');
    let audio = player.querySelector('audio');
+   let ranges = player.querySelectorAll('input[type="range"]');
+   let skipButtons = player.querySelectorAll('[data-skip]');
+   
 
    audio.ontimeupdate = function(){
       player.querySelector('.progress-bar').style.width = audio.currentTime / audio.duration * 100 + '%';
    }
+   
+   progress.addEventListener('click', function(e) {
+      audio.currentTime = (e.offsetX / progress.offsetWidth ) * audio.duration;
+   });
 
+   function handleRangeUpdate() {
+      audio[this.name] = this.value;
+   }
+
+   ranges.forEach(range => range.addEventListener('change', handleRangeUpdate));
+   ranges.forEach(range => range.addEventListener('mousemove', handleRangeUpdate));
+
+   function skip() {
+      audio.currentTime += parseFloat(this.dataset.skip);
+      // console.log(audio.currentTime);
+   }
+
+   skipButtons.forEach(button => button.addEventListener('click', skip));
+   
+   // skipButtons.forEach(button => button.addEventListener('click', function() {
+   //    console.log('skipped');
+   //    audio.currentTime += parseFloat(this.dataset.skip);
+   // }));
+   
 })
 
