@@ -11549,7 +11549,6 @@ __WEBPACK_IMPORTED_MODULE_0_vue__["default"].component('records', {
                   <i data-skip="-3" class="fas fa-fast-backward"></i>
                   <i class="fas fa-stop" @click="stop(self, $event)"></i>
                   <i class="fas pp" :class=" self.playing ? 'fa-pause' : 'fa-play' " @click="togglePlay(self, $event)"></i>
-                  <!-- <i class="far" :class="[{ 'fa-play-circle': !(self.playing) }, { 'fa-pause-circle': self.playing }]" @click="togglePlay(self, $event)"></i> -->
                   <i data-skip="2" class="fas fa-fast-forward"></i>
                </div>
 
@@ -11560,7 +11559,6 @@ __WEBPACK_IMPORTED_MODULE_0_vue__["default"].component('records', {
 
          <div class="tune-list" :class="self.showPlayer ? 'active' : ''">
             <i class="far pp" :class=" self.playing ? 'fa-pause-circle' : 'fa-play-circle' " @click="togglePlay(self, $event)"></i>
-            <!-- <i class="far" :class="[{ 'fa-play-circle': !(self.playing) }, { 'fa-pause-circle': self.playing }]" @click="togglePlay(self, $event)"></i> -->
             <h2>{{ self.title }}</h2>
             <p>{{ self.description }}</p>
          </div> <!-- tune-list -->
@@ -11602,24 +11600,15 @@ __WEBPACK_IMPORTED_MODULE_0_vue__["default"].component('records', {
 
       this.reset();
 
-      Event.$on('close', () => {
-         this.reset();
-      });
+      Event.$on('close', this.reset);
 
       window.addEventListener('keydown', function (e) {
          if (e.keyCode === 32) {
             let activePlayer = document.querySelector('.player.active');
             if (!activePlayer) return;
             let activeAudio = activePlayer.querySelector('audio');
-            // let pp = document.querySelectorAll('.active .pp');
-            // console.log(pp);
-            if (activeAudio.paused) {
-               activeAudio.play();
-               // pp.forEach(pp => pp.className = 'far pp fa-pause-circle');
-            } else {
-               activeAudio.pause();
-               // pp.forEach(pp => pp.className = 'far pp fa-play-circle');
-            }
+
+            activeAudio.paused ? activeAudio.play() : activeAudio.pause();
          }
       });
    },
@@ -11629,7 +11618,6 @@ __WEBPACK_IMPORTED_MODULE_0_vue__["default"].component('records', {
       reset() {
          this.records.forEach(self => {
             self.showPlayer = false;
-            self.playing = false;
          });
       },
 
@@ -11639,19 +11627,23 @@ __WEBPACK_IMPORTED_MODULE_0_vue__["default"].component('records', {
       },
 
       togglePlay(self, e) {
+
          let audio = this.audio(e);
+
          if (audio.paused) {
-            Array.from(document.querySelectorAll('audio')).filter(anotherAudio => anotherAudio !== audio).forEach(anotherAudio => {
-               anotherAudio.pause();
-               anotherAudio.currentTime = 0;
-            });
-            this.reset();
+
+            if (!self.showPlayer) {
+               Array.from(document.querySelectorAll('audio')).filter(anotherAudio => anotherAudio !== audio).forEach(anotherAudio => {
+                  anotherAudio.pause();
+                  anotherAudio.currentTime = 0;
+               });
+               this.reset();
+               self.showPlayer = true;
+            }
+
             audio.play();
-            // self.playing = true;
-            self.showPlayer = true;
          } else {
             audio.pause();
-            // self.playing = false;
          }
       },
 
@@ -11747,15 +11739,9 @@ document.querySelectorAll('.player').forEach(player => {
 
    function skip() {
       audio.currentTime += parseFloat(this.dataset.skip);
-      // console.log(audio.currentTime);
    }
 
    skipButtons.forEach(button => button.addEventListener('click', skip));
-
-   // skipButtons.forEach(button => button.addEventListener('click', function() {
-   //    console.log('skipped');
-   //    audio.currentTime += parseFloat(this.dataset.skip);
-   // }));
 });
 
 /***/ }),
