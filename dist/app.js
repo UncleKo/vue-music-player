@@ -11576,19 +11576,19 @@ __WEBPACK_IMPORTED_MODULE_0_vue__["default"].component('records', {
          records: [{
             title: 'Tune1',
             description: 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. ',
-            src: './files/tune1.wav',
+            src: './files/tune1.mp3',
             playing: '',
             showPlayer: ''
          }, {
             title: 'Tune2',
             description: 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. ',
-            src: './files/tune2.wav',
+            src: './files/tune2.mp3',
             playing: '',
             showPlayer: ''
          }, {
             title: 'Tune3',
             description: 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. ',
-            src: './files/tune3.wav',
+            src: './files/tune3.mp3',
             playing: '',
             showPlayer: ''
          }]
